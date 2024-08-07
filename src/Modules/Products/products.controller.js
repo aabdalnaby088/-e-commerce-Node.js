@@ -4,6 +4,7 @@ import { calculatePrice, cloudinaryConfig, discountType, ErrorClass, uploadFile 
 //Models
 import { Product } from "../../../DB/Models/index.js";
 import slugify from 'slugify';
+import { ApiFeatures } from '../../Utils/api-features.utils.js';
 
 /**
  * @api {POST} /products/add Add Product
@@ -126,7 +127,7 @@ res.status(201).json({
 export const getProducts = async (req,res,next) => {
 // find all products 
 const {page = 1 , limit = 5 , sortBy , type = 1} = req.query ; 
-const { title, minPrice, maxPrice, inStock } = req.body 
+    const { title, minPrice, maxPrice, inStock, brandId, categoryId, subCategoryId } = req.body 
 const filters = {}; 
 const sort = {} ; 
     if (sortBy) {
@@ -144,8 +145,38 @@ if(maxPrice){
 if(inStock){
     filters.stock = {$gte : 1}
 }
-const skip = (page-1)*limit
-    const products = await Product.find(filters).limit(limit).skip(skip).populate("categoryId").populate("brandId").sort(sort); 
+if(brandId){
+    filters.brandId = brandId
+}
+if(categoryId){
+    filters.categoryId = categoryId
+}
+if(subCategoryId){
+    filters.subCategoryId = subCategoryId
+}
+
+
+
+// pagination using mongoose plugin
+
+    const mongooseQuery = Product.find()
+//     .paginate(
+// filters,
+//         {
+//             page,
+//             limit,
+//             skip,
+//             select: "-Images --spescs -categoryId -subCategoryId -brandId",
+//             sort: { appliedPrice: 1 },
+//         }
+//     );
+
+    const ApiFeatureInstance = new ApiFeatures(mongooseQuery , filters , req.query).filter().pagination().sort()
+
+    const products = await ApiFeatureInstance.mongooseQuery;
+//pagination using the normal find method 
+
+    // const products = await Product.find(filters).limit(limit).skip(skip).populate("categoryId").populate("brandId").sort(sort); 
 res.status(200).json({
     status: "success",
     data: products,

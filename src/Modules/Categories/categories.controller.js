@@ -1,149 +1,15 @@
-// import slugify from "slugify";
-// import { nanoid } from "nanoid";
-// // utils
-// import { ErrorClass } from "../../Utils/error-class.utils.js";
-// import { cloudinaryConfig } from "../../Utils/cloudinary.utils.js";
-// // models
+
 import { Category } from "../../../DB/Models/category.model.js";
 
 import slugify from "slugify"
 import { ErrorClass } from "../../Utils/error-class.utils.js"
-import { cloudinaryConfig } from "../../Utils/cloudinary.utils.js";
+import { cloudinaryConfig, uploadFile } from "../../Utils/cloudinary.utils.js";
 import { nanoid } from "nanoid";
 import { subCategory } from "../../../DB/Models/sub-categories.model.js"
 import { brand } from "../../../DB/Models/brand.model.js";
+import { ApiFeatures } from "../../Utils/api-features.utils.js";
 
-// import { Category } from "../../../DB/Models/category.model.js";
 
-// /**
-//  * @api {POST} /categories/create  create a  new category
-//  */
-// export const createCategory = async (req, res, next) => {
-//   // destructuring the request body
-//   const { name } = req.body;
-
-//   // Generating category slug
-//   const slug = slugify(name, {
-//     replacement: "_",
-//     lower: true,
-//   });
-
-//   // Image
-//   if (!req.file) {
-//     return next(
-//       new ErrorClass("Please upload an image", 400, "Please upload an image")
-//     );
-//   }
-//   // upload the image to cloudinary
-//   const customId = nanoid(4);
-//   const { secure_url, public_id } = await cloudinaryConfig().uploader.upload(
-//     req.file.path,
-//     {
-//       folder: `${process.env.UPLOADS_FOLDER}/Categories/${customId}`,
-//     }
-//   );
-
-//   // prepare category object
-//   const category = {
-//     name,
-//     slug,
-//     Images: {
-//       secure_url,
-//       public_id,
-//     },
-//     customId,
-//   };
-
-//   // create the category in db
-//   const newCategory = await Category.create(category);
-
-//   // send the response
-//   res.status(201).json({
-//     status: "success",
-//     message: "Category created successfully",
-//     data: newCategory,
-//   });
-// };
-
-// /**
-//  * @api {GET} /categories Get category by name or id or slug
-//  */
-// export const getCategory = async (req, res, next) => {
-//   const { id, name, slug } = req.query;
-//   const queryFilter = {};
-
-//   // check if the query params are present
-//   if (id) queryFilter._id = id;
-//   if (name) queryFilter.name = name;
-//   if (slug) queryFilter.slug = slug;
-
-//   // find the category
-//   const category = await Category.findOne(queryFilter);
-
-//   if (!category) {
-//     return next(
-//       new ErrorClass("Category not found", 404, "Category not found")
-//     );
-//   }
-
-//   res.status(200).json({
-//     status: "success",
-//     message: "Category found",
-//     data: category,
-//   });
-// };
-
-// /**
-//  * @api {PUT} /categories/update/:_id  Update a category
-//  */
-// export const updateCategory = async (req, res, next) => {
-//   // get the category id
-//   const { _id } = req.params;
-//   // find the category by id
-//   const category = await Category.findById(_id);
-//   if (!category) {
-//     return next(
-//       new ErrorClass("Category not found", 404, "Category not found")
-//     );
-//   }
-//   // name of the category
-//   const { name, public_id_new } = req.body; 
-
-//   if (name) {
-//     const slug = slugify(name, {
-//       replacement: "_",
-//       lower: true,
-//     });
-
-//     category.name = name;
-//     category.slug = slug;
-//   }
-
-//   //Image
-//   if (req.file) {
-//     const splitedPublicId = category.Images.public_id_new.split(
-//       `${category.customId}/`
-//     )[1];
-
-//     const { secure_url } = await cloudinaryConfig().uploader.upload(
-//       req.file.path,
-//       {
-//         folder: `${process.env.UPLOADS_FOLDER}/Categories/${category.customId}`,
-//         public_id: splitedPublicId,
-//       }
-//     );
-//     category.Images.secure_url = secure_url;
-//   }
-
-//   // save the category with the new changes
-//   await category.save();
-
-//   res.status(200).json({
-//     status: "success",
-//     message: "Category updated successfully",
-//     data: category,
-//   });
-// };
 
 /**
  * @api {POST} /category/create
@@ -151,10 +17,6 @@ import { brand } from "../../../DB/Models/brand.model.js";
 
 export const createCategory = async (req,res,next) => {
   const {name} = req.body
-  // const isNameExists = await Category.findOne({name})
-  // if(isNameExists){
-  //   return next(new ErrorClass("category with same name already exists",400,"category exists"))
-  // }
   //generate slug 
   const slug= slugify(name , {
     replacement: "_",
@@ -167,18 +29,22 @@ export const createCategory = async (req,res,next) => {
 
   //upload the image to cloudinary
   const customId = nanoid(4)
-  const img = await cloudinaryConfig().uploader.upload(req.file.path , {
-    folder: `${process.env.UPLOADS_FOLDER}/Categories/${customId}`
-  })
-  console.log(img.secure_url);
-//   console.log("hiiii");
-// console.log(secure_url , public_id);
+  const { secure_url, public_id } = await uploadFile({
+    file: req.file.path,
+    folder: `${process.env.UPLOADS_FOLDER}/Categories/${customId}`,
+  });
+
+
+  console.log(public_id );
+  
+
+
     const category = {
       name,
       slug,
       Images: {
-        secure_url:img.secure_url,
-        public_id:img.public_id,
+        secure_url,
+        public_id
       },
       customId,
     };
@@ -272,19 +138,6 @@ await cloudinaryConfig().api.delete_resources_by_prefix(categoryPath )
 await cloudinaryConfig().api.delete_folder(categoryPath)
 
 
-const deletedSubcategories = await subCategory.deleteMany({
-  categoryId : _id
-})
-
-if(deletedSubcategories.deletedCount){
-  await brand.deleteMany({
-    categoryId : _id
-  })
-  //todo relevant products
-}
-
-
-
 
 res.status(200).json({
   status: "success",
@@ -292,4 +145,23 @@ res.status(200).json({
   data: category
 })
 
+}
+
+/**
+ * @api {GET} /categories/list list categories 
+ */
+
+export const listCategories = async (req,res,next) => {
+  const { name, slug } = req.query; 
+  const mongooseQuery = Category.find() ; 
+  let queryFilter = {};
+  if (name) queryFilter.name = name
+  if (slug) queryFilter.slug = slug
+  const apiFeatures = new ApiFeatures(mongooseQuery, queryFilter ,req.query).pagination().sort().filter()
+
+  const list = await apiFeatures.mongooseQuery; 
+  res.status(200).json({
+    message: 'success', 
+    data: list
+  })
 }
