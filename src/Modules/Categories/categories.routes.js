@@ -2,7 +2,7 @@ import { Router } from "express";
 import { multerHost } from "../../Middlewares/multer.middleware.js";
 import { extensions } from "../../Utils/index.js";
 import { errorHandler } from "../../Middlewares/error-handling.middleware.js";
-import { createCategory, deleteCategory, getCategory, updateCategory } from "./categories.controller.js";
+import { createCategory, deleteCategory, getCategory, listCategories, updateCategory } from "./categories.controller.js";
 import { getDocumentByName } from "../../Middlewares/finders.middleware.js";
 import { Category } from "../../../DB/Models/category.model.js";
 // // controllers
@@ -53,6 +53,8 @@ categoryRouter.put("/update/:_id" ,
 )
 
 categoryRouter.delete("/delete/:_id" , errorHandler(deleteCategory))
+
+categoryRouter.get('/list' , errorHandler(listCategories))
 
 export {
   categoryRouter

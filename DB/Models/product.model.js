@@ -1,6 +1,7 @@
-import mongoose from "mongoose";
+// import mongoose from "mongoose";
 import slugify from "slugify";
 import { Badges, calculatePrice, discountType } from "../../src/Utils/index.js";
+import mongoose from "../global-setup.js";
 const { Schema, model } = mongoose;
 
 const productSchema = new Schema({
