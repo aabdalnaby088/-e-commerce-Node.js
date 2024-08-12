@@ -16,7 +16,10 @@ app.use("/categories", router.categoryRouter);
 app.use("/products", router.productRouter);
 app.use("/sub-categories", router.subCategoryRouter);
 app.use("/brands", router.brandRouter);
-app.use("/user" , router.userRouter)
+app.use("/user" , router.userRouter);
+app.use("/addresses" , router.addressRouter);
+app.use("/cart" , router.cartRouter);
+app.use("/coupon" , router.couponRouter)
 
 app.use(globaleResponse);
 
